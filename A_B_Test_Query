@@ -1,0 +1,27 @@
+WITH t1 AS (SELECT Campaign,
+       Impressions,
+       cost
+FROM turing_data_analytics.adsense_monthly
+WHERE campaign = 'NewYear_V1'
+      OR campaign = 'NewYear_V2'
+      OR (campaign = 'BlackFriday_V1' AND month != 202111)
+      OR campaign = 'BlackFriday_V2'),
+
+t2 AS (SELECT campaign,
+       COUNT(DISTINCT(user_pseudo_id)) AS Conversions
+ FROM `tc-da-1.turing_data_analytics.raw_events` 
+WHERE event_name = 'page_view' AND (campaign = 'NewYear_V1' 
+      OR campaign = 'NewYear_V2' 
+      OR (campaign = 'BlackFriday_V1') 
+      OR campaign = 'BlackFriday_V2')
+GROUP BY campaign)
+
+SELECT t1.Campaign,
+       t1.Impressions, 
+       t2.Conversions,
+       t1.cost AS Cost, 
+       ROUND(((t2.Conversions / t1.Impressions) * 100), 3) AS COV
+FROM t1
+JOIN t2 
+  ON t2.campaign = t1.Campaign
+ORDER BY t1.campaign
